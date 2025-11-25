@@ -1,17 +1,21 @@
-# استخدم صورة رسمية من Python
-FROM python:3.10-slim
+FROM python:3.10-slim-bookworm
 
-# تعيين مسار العمل داخل الحاوية
 WORKDIR /app
 
-# نسخ الملفات إلى الحاوية
-COPY . .
+# Install minimal system dependencies only
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# تثبيت المتطلبات
+# Copy only requirements first (better cache)
+COPY requirements.txt .
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# فتح البورت الذي سيعمل عليه FastAPI
+# Copy the rest of the project
+COPY . .
+
 EXPOSE 8080
 
-# الأمر لتشغيل التطبيق
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
